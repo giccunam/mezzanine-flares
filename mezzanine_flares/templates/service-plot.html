@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{%block extra_js}
+
+{%endblock}
+
+{% block meta_title %}{% trans "Home" %}{% endblock %}
+{% block title %}{% trans "Home" %}{% endblock %}
+
+{% block breadcrumb_menu %}
+<li class="active">Servicio de Graficación</li>
+{% endblock %}
+
+{% block main %}
+<h1>
+Este es el servicio de graficación
+</h1>
+<form method="post" action="/flares/service-plot/" enctype="multipart/form-data">{% csrf_token %}
+{{ form }}
+  <button type="submit" name="execute_page_button" class="btn btn-success">Ejecutar</button>
+  <input type="submit" value="Cancelar" name="cancel_page_button" class="btn btn-danger" formnovalidate></input>  
+</form>
+{% endblock %}
