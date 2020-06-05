@@ -3,6 +3,13 @@ from django.shortcuts import render
 from mezzanine_flares.models import PlotXRay
 from mezzanine_flares.forms import PlotXRay_Form
 from django.http import HttpResponseRedirect
+import mysql.connector
+from mysql.connector import errorcode
+import json
+import datetime
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 class Service_Plot_View(View):
@@ -24,26 +31,31 @@ class Service_Plot_View(View):
             form = self.form_class(request.POST)
             if form.is_valid():
                 plotXRay = form.save()
-                print("output: "+str(plotXRay.flux_finish))
-                #GENERAR LA IMAGEN QUE TENEMOS ALMACENADA EN LA DB CON LA INFO EN plotXRay
-                PATH='/home/vdelaluz/git/running/static/flares/'
+                ####print("output: "+str(plotXRay.flux_finish))
+                #####GENERAR LA IMAGEN QUE TENEMOS ALMACENADA EN LA DB CON LA INFO EN plotXRay
+                PATH_FILE='/home/vdelaluz/public_html/gicc/static/flares/'
+                PATH_URL = '/static/flares/'
+
                 with open('/home/vdelaluz/credentials/db.json') as json_file:
                     config = json.load(json_file)
                 x = []
                 y = []
-
+                
                 try:
                     cnx = mysql.connector.connect(**config)
                     cursor = cnx.cursor()
-                    query = ("SELECT time_tag, flux FROM FluxHighEnergy WHERE flux > 0.00000002 ORDER BY time_tag")
+                    query = ("SELECT time_tag, flux FROM FluxHighEnergy WHERE %s < time_tag AND time_tag <= %s ORDER BY time_tag")
                     #data_query = (mydate, flux, satellite)
+
+                    data_query = (plotXRay.initial_date, plotXRay.end_date)
+                    #datetime.date(2012, 3, 23), datetime.date(2012, 3, 23) ) 
                     #print(mydate)
-                    cursor.execute(query)#,data_query)
+                    cursor.execute(query,data_query)
                     for (time_tag, flux) in cursor:
                         print(f"{time_tag}\t{flux}")
                         x.append(time_tag)
                         y.append(flux)
-        
+                
                 except mysql.connector.Error as err:
                     if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                         print("Something is wrong with your user name or password")
@@ -53,18 +65,19 @@ class Service_Plot_View(View):
                         print(err)
                 else:
                     cnx.close()
-
-
+                
+                
                 fig, ax = plt.subplots()
                 ax.set(xlabel='time', ylabel='flux',
                        title='view2D')
                 #plt.axis([x_A, x_B,  y_A, y_B])
                 ax.grid()
-
+                
                 ax.plot(x, y)
-                fig.savefig(PATH+"/last_flux.png")
-                urlpic= PATH+"/last_flux.png"
-                return render(request, 'myplugin/plot.html' , {'urlpic': urlpic})
+
+                fig.savefig(PATH_FILE+"/last_flux.png")
+                urlpic= PATH_URL+"/last_flux.png"
+                return render(request, 'mezzanine_flares/plot.html' , {'urlpic': urlpic})
             else:
                 print('form not valid')
                 return render(request, self.template_name, {'form': form})

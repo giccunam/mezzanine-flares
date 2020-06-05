@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{%block extra_js}
+
+{%endblock}
+
+{% block meta_title %}{% trans "Home" %}{% endblock %}
+{% block title %}{% trans "Home" %}{% endblock %}
+
+
+
+
+{% block breadcrumb_menu %}
+<li class="active">Servicio de Graficación</li>
+{% endblock %}
+
+{% block main %}
+<h1>
+el plot
+</h1>
+
+{% endblock %}
